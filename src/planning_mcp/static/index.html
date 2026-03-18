@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">Plan Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-inner">
+      <h1 id="plan-title">Loading...</h1>
+      <span class="header-badge">Plan Review</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="main-content" id="plan-content"></div>
+    <div class="comment-margin" id="comment-margin"></div>
+  </div>
+
+  <!-- Selection toolbar (hidden until text selected) -->
+  <div class="selection-toolbar" id="selection-toolbar">
+    <button class="tb-investigate" data-tb-action="investigate">Investigate</button>
+    <button class="tb-opinion" data-tb-action="update_opinion">Update &middot; Opinion</button>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-inner">
+      <div class="footer-textarea-wrap">
+        <div class="footer-label">
+          Overall feedback
+          <span class="pending-count" id="pending-count"></span>
+        </div>
+        <textarea class="footer-textarea" id="overall-feedback"
+          placeholder="Structural feedback for the whole plan..."></textarea>
+      </div>
+      <div class="footer-submit-wrap">
+        <button class="btn-revise" id="submit-btn">Submit &amp; Revise</button>
+        <div class="footer-status" id="footer-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/static/js/main.js"></script>
+</body>
+</html>
