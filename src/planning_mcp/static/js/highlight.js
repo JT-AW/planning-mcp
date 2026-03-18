@@ -128,9 +128,23 @@ export function reanchorComments() {
 
     const found = highlightTextInDOMWithHint(c.selectedText, markId, c.textOffset);
     if (!found) {
-      const ctxFound = c.anchorContext
-        ? highlightTextInDOMWithHint(c.anchorContext, markId, c.textOffset)
-        : false;
+      // Use anchorContext to locate the region, then highlight selectedText within it.
+      // This avoids highlighting the full 100-char context as a superset of the selection.
+      let ctxFound = false;
+      if (c.anchorContext && c.selectedText) {
+        const mainEl = document.querySelector(".main-content");
+        const fullText = mainEl.textContent;
+        const ctxIdx = fullText.indexOf(c.anchorContext);
+        if (ctxIdx !== -1) {
+          // Search for selectedText within the context region
+          const regionEnd = ctxIdx + c.anchorContext.length;
+          const region = fullText.slice(ctxIdx, regionEnd);
+          const localIdx = region.indexOf(c.selectedText);
+          if (localIdx !== -1) {
+            ctxFound = highlightTextInDOMWithHint(c.selectedText, markId, ctxIdx + localIdx);
+          }
+        }
+      }
       if (!ctxFound) c.orphaned = true;
     } else {
       c.orphaned = false;

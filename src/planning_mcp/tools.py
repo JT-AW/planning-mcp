@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import threading
 import uuid
 import webbrowser
 from datetime import UTC, datetime
+from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
@@ -20,27 +22,49 @@ mcp = FastMCP(
         "Interactive plan review tool. Publish a plan with open_plan, "
         "then poll get_feedback for user annotations. Use update_section "
         "to push revised content back to the browser. Use reply_to_feedback "
-        "to respond to specific comments in-thread."
+        "to respond to specific comments in-thread.\n\n"
+        "IMPORTANT: When calling open_plan or update_plan, prefer writing the "
+        "markdown to a temporary file and passing plan_file instead of inlining "
+        "the full content in plan_markdown. This avoids bloating the tool call "
+        "payload. Example: write to /tmp/plan.md, then call "
+        'open_plan(plan_file="/tmp/plan.md", plan_title="My Plan").'
     ),
 )
 
 
 @mcp.tool()
-def open_plan(plan_markdown: str, plan_title: str = "Plan Review") -> dict[str, object]:
+def open_plan(
+    plan_markdown: str = "",
+    plan_file: str = "",
+    plan_title: str = "Plan Review",
+) -> dict[str, object]:
     """Publish a plan to the browser for interactive review.
 
+    PREFERRED: Write markdown to a temp file and pass plan_file="/tmp/plan.md"
+    instead of inlining content in plan_markdown. This keeps the tool call small.
+
+    If both are given, plan_file takes precedence.
     Starts the web server on first call (subsequent calls reuse it).
     Opens the browser automatically. Returns {"port": int, "url": str}.
     """
+    markdown = plan_markdown
+    if plan_file:
+        path = Path(plan_file).expanduser()
+        markdown = path.read_text(encoding="utf-8")
+
+    if not markdown:
+        return {"error": "Provide either plan_markdown or plan_file"}
+
     port = start_web_server()
     url = f"http://127.0.0.1:{port}"
 
     with state.lock:
-        state.markdown = plan_markdown
+        state.markdown = markdown
         state.title = plan_title
 
     broadcast("plan_updated")
-    webbrowser.open(url)
+    # Open browser in a thread to avoid blocking the MCP tool return
+    threading.Thread(target=webbrowser.open, args=(url,), daemon=True).start()
 
     return {"port": port, "url": url}
 
@@ -69,11 +93,23 @@ def mark_feedback_processed(feedback_id: str) -> dict[str, object]:
 
 
 @mcp.tool()
-def update_plan(plan_markdown: str) -> dict[str, object]:
-    """Replace the entire plan with updated markdown. Browser auto-refreshes via SSE."""
+def update_plan(plan_markdown: str = "", plan_file: str = "") -> dict[str, object]:
+    """Replace the entire plan with updated markdown. Browser auto-refreshes via SSE.
+
+    PREFERRED: Write markdown to a temp file and pass plan_file="/tmp/plan.md"
+    instead of inlining content in plan_markdown. This keeps the tool call small.
+    """
+    markdown = plan_markdown
+    if plan_file:
+        path = Path(plan_file).expanduser()
+        markdown = path.read_text(encoding="utf-8")
+
+    if not markdown:
+        return {"error": "Provide either plan_markdown or plan_file"}
+
     with state.lock:
-        state.markdown = plan_markdown
-        comment_state = _reanchor_all_comments(plan_markdown, state.feedback)
+        state.markdown = markdown
+        comment_state = _reanchor_all_comments(markdown, state.feedback)
     broadcast("plan_updated", {"comments": comment_state})
     return {"ok": True}
 
