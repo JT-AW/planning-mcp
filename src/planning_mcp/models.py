@@ -17,8 +17,13 @@ class Reply:
     author: Literal["user", "claude"]
     message: str
     timestamp: str
-    is_pushback: bool = False
+    pushback_type: Literal["none", "disagree", "alternative"] = "none"
     pushback_reasoning: str | None = None
+
+    @property
+    def is_pushback(self) -> bool:
+        """Backward compat: True when pushback_type is not 'none'."""
+        return self.pushback_type != "none"
 
 
 @dataclass
@@ -54,5 +59,13 @@ class FeedbackRequest(BaseModel):
 
 class ReplyRequest(BaseModel):
     message: str
-    is_pushback: bool = False
+    pushback_type: Literal["none", "disagree", "alternative"] = "none"
     pushback_reasoning: str | None = None
+
+    # Backward compat: accept is_pushback from old clients
+    is_pushback: bool = False
+
+
+class AcceptRequest(BaseModel):
+    vault_domain: str = ""
+    vault_filename: str = ""

@@ -3,6 +3,7 @@
 import { comments } from './state.js';
 import { fetchAndRender } from './render.js';
 import { renderCommentCards } from './comments.js';
+import { handleProjectChanged, handleProjectUpdated } from './sidebar.js';
 
 export function connectSSE() {
   const es = new EventSource("/events");
@@ -13,6 +14,10 @@ export function connectSSE() {
       fetchAndRender();
     } else if (msg.type === "reply_added") {
       handleReplyAdded(msg);
+    } else if (msg.type === "project_changed") {
+      handleProjectChanged();
+    } else if (msg.type === "project_updated") {
+      handleProjectUpdated();
     }
   };
   es.onerror = () => { es.close(); setTimeout(connectSSE, 2000); };

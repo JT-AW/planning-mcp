@@ -85,7 +85,8 @@ def serialize_reply(r: Reply) -> dict[str, object]:
         "author": r.author,
         "message": r.message,
         "timestamp": r.timestamp,
-        "is_pushback": r.is_pushback,
+        "pushback_type": r.pushback_type,
+        "is_pushback": r.is_pushback,  # backward compat
         "pushback_reasoning": r.pushback_reasoning,
     }
 

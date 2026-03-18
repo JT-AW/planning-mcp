@@ -1,7 +1,7 @@
 // Plan rendering and data loading
 
-import { setPlanData, comments, getNextLocalId } from './state.js';
-import { fetchPlan, fetchAllFeedback } from './api.js';
+import { setPlanData, setCurrentProject, setCurrentPlan, comments, getNextLocalId } from './state.js';
+import { fetchPlan, fetchPlanById, fetchAllFeedback } from './api.js';
 import { reanchorComments } from './highlight.js';
 import { renderCommentCards } from './comments.js';
 
@@ -47,6 +47,9 @@ export function renderPlan(markdown) {
 export async function fetchAndRender() {
   const data = await fetchPlan();
   setPlanData(data);
+  // Initialize project/plan IDs from backend state
+  if (data.project_id) setCurrentProject(data.project_id);
+  if (data.plan_id) setCurrentPlan(data.plan_id);
   document.getElementById("page-title").textContent = data.title;
   document.getElementById("plan-title").textContent = data.title;
   renderPlan(data.markdown);

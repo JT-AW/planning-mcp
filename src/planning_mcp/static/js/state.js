@@ -1,8 +1,21 @@
 // Client-side state store
 
-export let planData = { markdown: "", title: "" };
+export const state = {
+  currentProjectId: null,
+  currentPlanId: null,
+};
+
+export let planData = { markdown: "", title: "", plan_id: null, project_id: null, status: null };
 export let comments = [];
 let nextLocalId = 1;
+
+export function setCurrentProject(projectId) {
+  state.currentProjectId = projectId;
+}
+
+export function setCurrentPlan(planId) {
+  state.currentPlanId = planId;
+}
 
 export function setPlanData(data) {
   planData = data;

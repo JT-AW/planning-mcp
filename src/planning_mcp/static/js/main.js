@@ -7,6 +7,8 @@ import { renderCommentCards, updatePendingCount } from './comments.js';
 import { initToolbar } from './toolbar.js';
 import { submitAllDrafts, postFeedback } from './api.js';
 import { comments, addComment, getNextLocalId } from './state.js';
+import { fetchAndRenderProjects, initHeaderActions, initSidebarToggle } from './sidebar.js';
+import { initResizeHandles } from './resize.js';
 
 function initFooter() {
   const btn = document.getElementById("submit-btn");
@@ -102,6 +104,10 @@ async function init() {
   initToolbar();
   initFooter();
   initHighlightClickHandler();
+  initSidebarToggle();
+  initHeaderActions();
+  initResizeHandles();
+  fetchAndRenderProjects();
 
   // Reposition on resize
   window.addEventListener("resize", () => { renderCommentCards(); });

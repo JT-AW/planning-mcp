@@ -14,14 +14,33 @@
 <body>
   <div class="header">
     <div class="header-inner">
-      <h1 id="plan-title">Loading...</h1>
-      <span class="header-badge">Plan Review</span>
+      <div class="header-left">
+        <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle sidebar">
+          <span class="toggle-icon"></span>
+        </button>
+        <h1 id="plan-title">Loading...</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn-accept" id="btn-accept" style="display:none">Accept</button>
+        <button class="btn-new-cycle" id="btn-new-cycle" style="display:none">New Cycle</button>
+        <span class="header-badge">Plan Review</span>
+      </div>
     </div>
   </div>
 
-  <div class="layout">
-    <div class="main-content" id="plan-content"></div>
-    <div class="comment-margin" id="comment-margin"></div>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner" id="sidebar-content"></div>
+    </aside>
+    <div class="resize-handle" id="resize-sidebar" data-resize="sidebar"></div>
+
+    <!-- Main area: markdown + comments -->
+    <div class="layout">
+      <div class="main-content" id="plan-content"></div>
+      <div class="resize-handle" id="resize-comments" data-resize="comments"></div>
+      <div class="comment-margin" id="comment-margin"></div>
+    </div>
   </div>
 
   <!-- Selection toolbar (hidden until text selected) -->
