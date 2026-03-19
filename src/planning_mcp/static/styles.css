@@ -19,7 +19,6 @@
   --purple: #7c3aed;
   --radius: 6px;
   --radius-sm: 4px;
-  --sidebar-width: 240px;
 }
 
 body {
@@ -80,76 +79,8 @@ body {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.header-badge.archived {
-  color: var(--amber);
-  background: var(--amber-light);
-  border-color: var(--amber-border);
-}
 
-/* Breadcrumb in header */
-.breadcrumb-project { color: var(--text-secondary); }
-.breadcrumb-sep { color: var(--text-muted); font-weight: 400; }
-.breadcrumb-cycle { color: var(--text); }
-
-/* Header action buttons */
-.btn-accept {
-  background: #16a34a;
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 14px;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background 0.08s;
-}
-.btn-accept:hover { background: #15803d; }
-.btn-accept:disabled { background: #86efac; cursor: default; }
-
-.btn-new-cycle {
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 5px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background 0.08s;
-}
-.btn-new-cycle:hover { background: var(--accent-light); }
-
-/* ── Sidebar toggle ─────────────────────────── */
-.sidebar-toggle {
-  display: none; /* hidden on wide viewports, shown < 1100px */
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  padding: 0;
-  position: relative;
-  flex-shrink: 0;
-}
-.toggle-icon,
-.toggle-icon::before,
-.toggle-icon::after {
-  display: block;
-  width: 16px;
-  height: 2px;
-  background: var(--text-secondary);
-  border-radius: 1px;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  transition: transform 0.15s;
-}
-.toggle-icon { top: 50%; transform: translate(-50%, -50%); }
-.toggle-icon::before { content: ''; top: -5px; left: 0; transform: none; position: absolute; }
-.toggle-icon::after { content: ''; top: 5px; left: 0; transform: none; position: absolute; }
-
-/* ── Three-column app layout ────────────────── */
+/* ── App layout ────────────────────────────── */
 .app-layout {
   display: flex;
   min-height: 0;
@@ -191,152 +122,6 @@ body.resizing * {
   user-select: none;
 }
 
-/* ── Sidebar ────────────────────────────────── */
-.sidebar {
-  width: var(--sidebar-width);
-  flex-shrink: 0;
-  background: var(--surface);
-  position: sticky;
-  top: 49px; /* below header */
-  height: calc(100vh - 49px - 130px);
-  overflow-y: auto;
-  transition: width 0.15s, opacity 0.15s;
-}
-.sidebar.collapsed {
-  width: 0;
-  overflow: hidden;
-  opacity: 0;
-}
-.sidebar.collapsed + .resize-handle {
-  display: none;
-}
-.sidebar-inner {
-  padding: 12px 0;
-}
-
-/* Sidebar sections */
-.sidebar-section {
-  margin-bottom: 4px;
-}
-.sidebar-section-header {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  padding: 8px 16px 4px;
-}
-
-/* Project tree */
-.project-tree {
-  display: flex;
-  flex-direction: column;
-}
-.tree-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--text);
-  transition: background 0.06s;
-  user-select: none;
-}
-.tree-item:hover {
-  background: var(--accent-light);
-}
-.tree-item.active {
-  background: var(--accent-light);
-  font-weight: 600;
-}
-.tree-item.archived {
-  opacity: 0.5;
-}
-.tree-toggle {
-  font-size: 10px;
-  width: 14px;
-  text-align: center;
-  flex-shrink: 0;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.tree-toggle-spacer {
-  width: 14px;
-  flex-shrink: 0;
-}
-.tree-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-/* Status dots */
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.status-dot.status-active { background: #22c55e; }
-.status-dot.status-reviewing { background: #22c55e; }
-.status-dot.status-completed { background: #6b7280; }
-.status-dot.status-accepted { background: #6b7280; }
-.status-dot.status-archived { background: #6b7280; opacity: 0.5; }
-
-/* Vault links */
-.vault-link {
-  display: block;
-  padding: 3px 16px;
-  font-size: 12px;
-  color: var(--purple);
-  text-decoration: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: background 0.06s;
-}
-.vault-link:hover {
-  background: var(--accent-light);
-  text-decoration: underline;
-}
-
-/* Cycle history */
-.cycle-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 16px;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--text-secondary);
-  transition: background 0.06s;
-}
-.cycle-item:hover { background: var(--accent-light); }
-.cycle-item.active { background: var(--accent-light); font-weight: 600; color: var(--text); }
-.cycle-icon {
-  font-size: 10px;
-  width: 14px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.cycle-icon.accepted { color: #16a34a; }
-.cycle-icon.rejected { color: #dc2626; }
-.cycle-icon.reviewing { color: #22c55e; font-size: 8px; }
-.cycle-label { flex: 1; min-width: 0; }
-.cycle-status-badge {
-  font-size: 10px;
-  font-weight: 500;
-  padding: 0 5px;
-  border-radius: 3px;
-  text-transform: capitalize;
-}
-.cycle-status-badge.accepted { color: #16a34a; background: #f0fdf4; }
-.cycle-status-badge.rejected { color: #dc2626; background: #fef2f2; }
-.cycle-status-badge.reviewing { color: var(--amber); background: var(--amber-light); }
-.cycle-status-badge.draft { color: var(--text-muted); background: var(--accent-light); }
-
 /* ── Layout (markdown + comments) ───────────── */
 .layout {
   display: flex;
@@ -364,26 +149,6 @@ body.resizing * {
   gap: 8px;
 }
 
-/* ── Archived project overlay ───────────────── */
-.sidebar-empty {
-  padding: 8px 16px;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-style: italic;
-}
-.archived-toggle {
-  cursor: pointer;
-  user-select: none;
-}
-.archived-toggle:hover {
-  color: var(--text-secondary);
-}
-.archived-arrow {
-  font-size: 10px;
-  display: inline-block;
-  width: 10px;
-}
-
 .empty-plan-message {
   text-align: center;
   color: var(--text-muted);
@@ -391,28 +156,7 @@ body.resizing * {
   padding: 60px 20px;
 }
 
-body.archived-project .footer { display: none; }
-body.archived-project .comment-edit-area { display: none; }
-body.archived-project .reply-trigger { display: none; }
-body.archived-project .selection-toolbar { display: none !important; }
-
 /* ── Responsive ─────────────────────────────── */
-@media (max-width: 1100px) {
-  .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
-  .sidebar {
-    position: fixed;
-    top: 49px;
-    left: 0;
-    z-index: 25;
-    height: calc(100vh - 49px);
-    box-shadow: 2px 0 8px rgba(0,0,0,0.08);
-  }
-  .sidebar.collapsed {
-    width: 0;
-    box-shadow: none;
-  }
-}
-
 @media (max-width: 900px) {
   .layout { flex-direction: column; }
   .comment-margin { width: 100%; position: static; max-height: none; }
@@ -658,6 +402,13 @@ mark[data-comment].pulsing {
 .reply-author.user { color: var(--text-secondary); }
 .reply-author.claude { color: var(--purple); }
 .reply-message { font-size: 13px; color: var(--text); line-height: 1.45; }
+.reply-message p { margin: 0 0 4px; }
+.reply-message p:last-child { margin-bottom: 0; }
+.reply-message code { font-family: 'JetBrains Mono', monospace; background: var(--accent-light); border-radius: 3px; padding: 1px 4px; font-size: 12px; }
+.reply-message pre { background: var(--accent-light); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; margin: 4px 0; white-space: pre-wrap; word-break: break-word; }
+.reply-message pre code { background: none; padding: 0; white-space: pre-wrap; word-break: break-word; }
+.reply-message ul, .reply-message ol { margin: 2px 0; padding-left: 16px; }
+.reply-message li { margin-bottom: 1px; }
 
 .thread-reply.pushback {
   background: var(--amber-light);
@@ -707,8 +458,9 @@ mark[data-comment].pulsing {
 
 /* ── Orphaned comments ──────────────────────── */
 .comment-card.orphaned {
-  opacity: 0.6;
-  border-style: dotted;
+  opacity: 0.85;
+  border-style: dashed;
+  border-color: var(--amber-border);
 }
 .orphan-badge {
   font-size: 10px;

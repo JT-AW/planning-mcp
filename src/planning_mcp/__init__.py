@@ -1,4 +1,4 @@
-"""Planning MCP — interactive plan review with browser annotation."""
+"""Planning MCP — interactive plan review and browser annotation."""
 
 from planning_mcp.tools import mcp
 

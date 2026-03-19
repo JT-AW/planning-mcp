@@ -67,5 +67,4 @@ class ReplyRequest(BaseModel):
 
 
 class AcceptRequest(BaseModel):
-    vault_domain: str = ""
-    vault_filename: str = ""
+    save_path: str

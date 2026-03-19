@@ -9,10 +9,6 @@ from planning_mcp.models import PlanState
 
 state = PlanState()
 
-# Project/plan context for DB persistence (None = ad-hoc / legacy mode)
-current_project_id: str | None = None
-current_plan_id: str | None = None
-
 
 def find_free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

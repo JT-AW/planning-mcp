@@ -1,16 +1,13 @@
-// Column resize handles
+// Column resize handle for comment margin
 
-const MIN_SIDEBAR = 160;
-const MAX_SIDEBAR = 400;
 const MIN_COMMENTS = 200;
 const MAX_COMMENTS = 480;
 
 export function initResizeHandles() {
-  initHandle('resize-sidebar', 'sidebar', resizeSidebar);
-  initHandle('resize-comments', 'comments', resizeComments);
+  initHandle('resize-comments', resizeComments);
 }
 
-function initHandle(handleId, _kind, onDrag) {
+function initHandle(handleId, onDrag) {
   const handle = document.getElementById(handleId);
   if (!handle) return;
 
@@ -20,14 +17,8 @@ function initHandle(handleId, _kind, onDrag) {
   function onMouseDown(e) {
     e.preventDefault();
     startX = e.clientX;
-
-    if (_kind === 'sidebar') {
-      const sidebar = document.getElementById('sidebar');
-      startSize = sidebar ? sidebar.offsetWidth : 240;
-    } else {
-      const margin = document.getElementById('comment-margin');
-      startSize = margin ? margin.offsetWidth : 280;
-    }
+    const margin = document.getElementById('comment-margin');
+    startSize = margin ? margin.offsetWidth : 280;
 
     document.body.classList.add('resizing');
     handle.classList.add('active');
@@ -47,13 +38,6 @@ function initHandle(handleId, _kind, onDrag) {
   }
 
   handle.addEventListener('mousedown', onMouseDown);
-}
-
-function resizeSidebar(delta, startSize) {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar || sidebar.classList.contains('collapsed')) return;
-  const newWidth = Math.min(MAX_SIDEBAR, Math.max(MIN_SIDEBAR, startSize + delta));
-  sidebar.style.width = newWidth + 'px';
 }
 
 function resizeComments(delta, startSize) {

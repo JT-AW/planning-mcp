@@ -176,7 +176,13 @@ export function buildCommentCard(c) {
 
         const rmsg = document.createElement("div");
         rmsg.className = "reply-message";
-        rmsg.textContent = r.is_pushback ? (r.pushback_reasoning || r.message) : r.message;
+        const replyText = r.is_pushback ? (r.pushback_reasoning || r.message) : r.message;
+        if (r.author === "claude") {
+          // Safe: sanitized by DOMPurify before DOM insertion (same pattern as render.js)
+          rmsg.innerHTML = DOMPurify.sanitize(marked.parse(replyText)); // nosec: sanitized
+        } else {
+          rmsg.textContent = replyText;
+        }
         reply.appendChild(rmsg);
 
         thread.appendChild(reply);

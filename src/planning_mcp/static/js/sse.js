@@ -3,7 +3,6 @@
 import { comments } from './state.js';
 import { fetchAndRender } from './render.js';
 import { renderCommentCards } from './comments.js';
-import { handleProjectChanged, handleProjectUpdated } from './sidebar.js';
 
 export function connectSSE() {
   const es = new EventSource("/events");
@@ -14,10 +13,8 @@ export function connectSSE() {
       fetchAndRender();
     } else if (msg.type === "reply_added") {
       handleReplyAdded(msg);
-    } else if (msg.type === "project_changed") {
-      handleProjectChanged();
-    } else if (msg.type === "project_updated") {
-      handleProjectUpdated();
+    } else if (msg.type === "plan_accepted") {
+      showAcceptedBanner();
     }
   };
   es.onerror = () => { es.close(); setTimeout(connectSSE, 2000); };
@@ -39,4 +36,16 @@ export function applyServerAnchors(serverComments) {
       c.orphaned = sc.orphaned;
     }
   });
+}
+
+function showAcceptedBanner() {
+  const existing = document.getElementById("accepted-banner");
+  if (existing) existing.remove();
+
+  const banner = document.createElement("div");
+  banner.id = "accepted-banner";
+  banner.style.cssText = "position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:8px 20px;border-radius:6px;font-size:13px;font-weight:600;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15);";
+  banner.textContent = "Plan accepted and saved";
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 4000);
 }
