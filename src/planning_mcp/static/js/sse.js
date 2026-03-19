@@ -3,6 +3,7 @@
 import { comments } from './state.js';
 import { fetchAndRender } from './render.js';
 import { renderCommentCards } from './comments.js';
+import { morphButton } from './main.js';
 
 export function connectSSE() {
   const es = new EventSource("/events");
@@ -37,11 +38,8 @@ function handleReplyAdded(msg) {
   // User reply to processed comment reopens it
   if (msg.unprocessed) {
     c.status = "submitted";
-    const statusEl = document.getElementById("footer-status");
-    if (statusEl) {
-      statusEl.textContent = "Comment reopened \u2014 Claude is revising...";
-      statusEl.className = "footer-status sent";
-    }
+    const btn = document.getElementById("submit-btn");
+    if (btn) morphButton(btn, "awaiting", "Awaiting revision");
   }
   renderCommentCards();
 }

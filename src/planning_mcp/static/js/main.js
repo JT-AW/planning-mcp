@@ -9,9 +9,24 @@ import { submitAllDrafts, postFeedback } from './api.js';
 import { comments, addComment, getNextLocalId } from './state.js';
 import { initResizeHandles } from './resize.js';
 
+const DEFAULT_BTN_TEXT = "Submit & Revise";
+let morphTimer = null;
+
+export function morphButton(btn, state, text) {
+  if (morphTimer) { clearTimeout(morphTimer); morphTimer = null; }
+  btn.className = "btn-revise" + (state ? " " + state : "");
+  btn.textContent = text || DEFAULT_BTN_TEXT;
+  btn.disabled = state === "sending";
+}
+
+function resetButton(btn, delay = 2500) {
+  morphTimer = setTimeout(() => {
+    morphButton(btn, "", DEFAULT_BTN_TEXT);
+  }, delay);
+}
+
 function initFooter() {
   const btn = document.getElementById("submit-btn");
-  const statusEl = document.getElementById("footer-status");
 
   async function submitAllFeedback() {
     const overallText = document.getElementById("overall-feedback").value.trim();
@@ -44,20 +59,17 @@ function initFooter() {
     }
 
     if (drafts.length === 0 && !overallText) {
-      const reopened = comments.filter(c => c.status === "submitted");
-      if (reopened.length > 0) {
-        statusEl.textContent = `${reopened.length} reopened comment${reopened.length === 1 ? "" : "s"} already sent \u2014 Claude is revising...`;
-        statusEl.className = "footer-status sent";
+      const submitted = comments.filter(c => c.status === "submitted");
+      if (submitted.length > 0) {
+        morphButton(btn, "awaiting", "Awaiting revision");
       } else {
-        statusEl.textContent = "No feedback to submit.";
-        statusEl.className = "footer-status";
+        morphButton(btn, "empty", "Nothing to send");
+        resetButton(btn, 2000);
       }
       return;
     }
 
-    btn.disabled = true;
-    statusEl.textContent = "Sending...";
-    statusEl.className = "footer-status";
+    morphButton(btn, "sending", "Sending...");
 
     try {
       await submitAllDrafts();
@@ -68,13 +80,11 @@ function initFooter() {
 
       document.getElementById("overall-feedback").value = "";
       renderCommentCards();
-      statusEl.textContent = "Sent \u2014 Claude is revising...";
-      statusEl.className = "footer-status sent";
+      morphButton(btn, "sent", "Sent");
+      resetButton(btn);
     } catch {
-      statusEl.textContent = "Error sending. Try again.";
-      statusEl.className = "footer-status";
-    } finally {
-      btn.disabled = false;
+      morphButton(btn, "error", "Retry");
+      resetButton(btn, 3000);
     }
   }
 
