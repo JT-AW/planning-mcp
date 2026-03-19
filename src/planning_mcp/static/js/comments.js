@@ -73,13 +73,25 @@ function buildCardContent(container, c, markId) {
     container.appendChild(thread);
   }
 
-  // Reply trigger — available for submitted AND processed comments
-  if ((c.status === "submitted" || c.status === "processed") && c.serverId) {
+  // Reply trigger — available for draft, submitted, and processed comments
+  if (c.status === "draft" || c.status === "submitted" || c.status === "processed") {
     const trigger = document.createElement("span");
     trigger.className = "reply-trigger";
     trigger.textContent = c.status === "processed" ? "Reply (reopens)" : "Reply";
-    trigger.addEventListener("click", () => {
-      // Find the closest .comment-card ancestor
+    trigger.addEventListener("click", async () => {
+      // Ensure comment has a serverId (drafts may not yet)
+      if (!c.serverId) {
+        try {
+          const data = await postFeedback({
+            type: c.type,
+            selected_text: c.selectedText || "",
+            anchor_context: c.anchorContext || "",
+            user_message: c.userMessage,
+            text_offset: c.textOffset || -1,
+          });
+          c.serverId = data.id;
+        } catch { return; }
+      }
       const card = container.closest(".comment-card") || container;
       showReplyInput(card, c);
     });
