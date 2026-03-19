@@ -88,11 +88,16 @@ def get_feedback() -> list[dict[str, object]]:
 @mcp.tool()
 def mark_feedback_processed(feedback_id: str) -> dict[str, object]:
     """Mark a feedback item as handled so it won't reappear in get_feedback."""
+    found = False
     with state.lock:
         for item in state.feedback:
             if item.id == feedback_id:
                 item.status = "processed"
-                return {"ok": True}
+                found = True
+                break
+    if found:
+        broadcast("feedback_processed", {"feedback_id": feedback_id})
+        return {"ok": True}
     return {"ok": False, "error": f"Feedback item {feedback_id!r} not found"}
 
 

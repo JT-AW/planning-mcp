@@ -44,8 +44,14 @@ function initFooter() {
     }
 
     if (drafts.length === 0 && !overallText) {
-      statusEl.textContent = "No feedback to submit.";
-      statusEl.className = "footer-status";
+      const reopened = comments.filter(c => c.status === "submitted");
+      if (reopened.length > 0) {
+        statusEl.textContent = `${reopened.length} reopened comment${reopened.length === 1 ? "" : "s"} already sent \u2014 Claude is revising...`;
+        statusEl.className = "footer-status sent";
+      } else {
+        statusEl.textContent = "No feedback to submit.";
+        statusEl.className = "footer-status";
+      }
       return;
     }
 

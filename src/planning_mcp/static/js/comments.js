@@ -31,11 +31,121 @@ export function renderCommentCards() {
   updatePendingCount();
 }
 
+function buildCardContent(container, c, markId) {
+  const msg = document.createElement("div");
+  msg.className = "comment-message";
+  msg.textContent = c.userMessage;
+  container.appendChild(msg);
+
+  // Replies
+  if (c.replies && c.replies.length > 0) {
+    const thread = document.createElement("div");
+    thread.className = "thread";
+    c.replies.forEach(r => {
+      const reply = document.createElement("div");
+      reply.className = `thread-reply${r.is_pushback ? " pushback" : ""}`;
+
+      if (r.is_pushback && r.pushback_reasoning) {
+        const pbLabel = document.createElement("div");
+        pbLabel.className = "pushback-label";
+        pbLabel.textContent = "Claude disagrees";
+        reply.appendChild(pbLabel);
+      }
+
+      const author = document.createElement("div");
+      author.className = `reply-author ${r.author}`;
+      author.textContent = r.author === "claude" ? "Claude" : "You";
+      reply.appendChild(author);
+
+      const rmsg = document.createElement("div");
+      rmsg.className = "reply-message";
+      const replyText = r.is_pushback ? (r.pushback_reasoning || r.message) : r.message;
+      if (r.author === "claude") {
+        // Safe: sanitized by DOMPurify before DOM insertion (same pattern as render.js)
+        rmsg.innerHTML = DOMPurify.sanitize(marked.parse(replyText)); // nosec: sanitized
+      } else {
+        rmsg.textContent = replyText;
+      }
+      reply.appendChild(rmsg);
+
+      thread.appendChild(reply);
+    });
+    container.appendChild(thread);
+  }
+
+  // Reply trigger — available for submitted AND processed comments
+  if ((c.status === "submitted" || c.status === "processed") && c.serverId) {
+    const trigger = document.createElement("span");
+    trigger.className = "reply-trigger";
+    trigger.textContent = c.status === "processed" ? "Reply (reopens)" : "Reply";
+    trigger.addEventListener("click", () => {
+      // Find the closest .comment-card ancestor
+      const card = container.closest(".comment-card") || container;
+      showReplyInput(card, c);
+    });
+    container.appendChild(trigger);
+  }
+
+  // Timestamp
+  if (c.timestamp) {
+    const ts = document.createElement("div");
+    ts.className = "comment-time";
+    const d = new Date(c.timestamp);
+    ts.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    container.appendChild(ts);
+  }
+}
+
 export function buildCommentCard(c) {
   const card = document.createElement("div");
   const markId = c.localId;
   card.className = `comment-card ${c.status}${c.orphaned ? " orphaned" : ""}`;
   card.dataset.localId = c.localId;
+
+  // Processed comments render as a collapsed summary
+  if (c.status === "processed") {
+    card.classList.add("collapsed");
+
+    const summary = document.createElement("div");
+    summary.className = "collapsed-summary";
+
+    const badge = document.createElement("span");
+    badge.className = `comment-type-badge ${c.type}`;
+    badge.textContent = c.type === "investigate" ? "Investigate"
+      : c.type === "update_opinion" ? "Update" : "Overall";
+    summary.appendChild(badge);
+
+    const processedBadge = document.createElement("span");
+    processedBadge.className = "processed-badge";
+    processedBadge.textContent = "resolved";
+    summary.appendChild(processedBadge);
+
+    const preview = document.createElement("span");
+    preview.className = "collapsed-preview";
+    preview.textContent = c.userMessage.slice(0, 40) + (c.userMessage.length > 40 ? "…" : "");
+    summary.appendChild(preview);
+
+    const toggle = document.createElement("span");
+    toggle.className = "collapsed-toggle";
+    toggle.textContent = "▸";
+    toggle.title = "Expand";
+    summary.appendChild(toggle);
+
+    summary.addEventListener("click", () => {
+      card.classList.toggle("expanded");
+      toggle.textContent = card.classList.contains("expanded") ? "▾" : "▸";
+    });
+
+    card.appendChild(summary);
+
+    // Expandable content (hidden by default)
+    const expandable = document.createElement("div");
+    expandable.className = "collapsed-content";
+    buildCardContent(expandable, c, markId);
+    card.appendChild(expandable);
+
+    return card;
+  }
 
   // Header
   const header = document.createElement("div");
@@ -149,64 +259,7 @@ export function buildCommentCard(c) {
     card.appendChild(editArea);
   } else {
     // Display mode
-    const msg = document.createElement("div");
-    msg.className = "comment-message";
-    msg.textContent = c.userMessage;
-    card.appendChild(msg);
-
-    // Replies
-    if (c.replies && c.replies.length > 0) {
-      const thread = document.createElement("div");
-      thread.className = "thread";
-      c.replies.forEach(r => {
-        const reply = document.createElement("div");
-        reply.className = `thread-reply${r.is_pushback ? " pushback" : ""}`;
-
-        if (r.is_pushback && r.pushback_reasoning) {
-          const pbLabel = document.createElement("div");
-          pbLabel.className = "pushback-label";
-          pbLabel.textContent = "Claude disagrees";
-          reply.appendChild(pbLabel);
-        }
-
-        const author = document.createElement("div");
-        author.className = `reply-author ${r.author}`;
-        author.textContent = r.author === "claude" ? "Claude" : "You";
-        reply.appendChild(author);
-
-        const rmsg = document.createElement("div");
-        rmsg.className = "reply-message";
-        const replyText = r.is_pushback ? (r.pushback_reasoning || r.message) : r.message;
-        if (r.author === "claude") {
-          // Safe: sanitized by DOMPurify before DOM insertion (same pattern as render.js)
-          rmsg.innerHTML = DOMPurify.sanitize(marked.parse(replyText)); // nosec: sanitized
-        } else {
-          rmsg.textContent = replyText;
-        }
-        reply.appendChild(rmsg);
-
-        thread.appendChild(reply);
-      });
-      card.appendChild(thread);
-    }
-
-    // Reply trigger
-    if (c.status === "submitted" && c.serverId) {
-      const trigger = document.createElement("span");
-      trigger.className = "reply-trigger";
-      trigger.textContent = "Reply";
-      trigger.addEventListener("click", () => showReplyInput(card, c));
-      card.appendChild(trigger);
-    }
-
-    // Timestamp
-    if (c.timestamp) {
-      const ts = document.createElement("div");
-      ts.className = "comment-time";
-      const d = new Date(c.timestamp);
-      ts.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      card.appendChild(ts);
-    }
+    buildCardContent(card, c, markId);
   }
 
   return card;

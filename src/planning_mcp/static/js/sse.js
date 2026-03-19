@@ -13,6 +13,8 @@ export function connectSSE() {
       fetchAndRender();
     } else if (msg.type === "reply_added") {
       handleReplyAdded(msg);
+    } else if (msg.type === "feedback_processed") {
+      handleFeedbackProcessed(msg);
     } else if (msg.type === "plan_accepted") {
       showAcceptedBanner();
     }
@@ -20,11 +22,27 @@ export function connectSSE() {
   es.onerror = () => { es.close(); setTimeout(connectSSE, 2000); };
 }
 
+function handleFeedbackProcessed(msg) {
+  const c = comments.find(c => c.serverId === msg.feedback_id);
+  if (!c) return;
+  c.status = "processed";
+  renderCommentCards();
+}
+
 function handleReplyAdded(msg) {
   const c = comments.find(c => c.serverId === msg.feedback_id);
   if (!c) return;
   if (!c.replies) c.replies = [];
   c.replies.push(msg.reply);
+  // User reply to processed comment reopens it
+  if (msg.unprocessed) {
+    c.status = "submitted";
+    const statusEl = document.getElementById("footer-status");
+    if (statusEl) {
+      statusEl.textContent = "Comment reopened \u2014 Claude is revising...";
+      statusEl.className = "footer-status sent";
+    }
+  }
   renderCommentCards();
 }
 

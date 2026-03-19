@@ -116,15 +116,27 @@ def add_reply(feedback_id: str, body: ReplyRequest) -> JSONResponse:
         pushback_reasoning=body.pushback_reasoning,
     )
     found = False
+    unprocessed = False
     with state.lock:
         for item in state.feedback:
             if item.id == feedback_id:
                 item.replies.append(reply)
                 found = True
+                # User reply to a processed comment re-opens it
+                if reply.author == "user" and item.status == "processed":
+                    item.status = "submitted"
+                    unprocessed = True
                 break
     if found:
-        broadcast("reply_added", {"feedback_id": feedback_id, "reply": serialize_reply(reply)})
-        return JSONResponse({"id": reply.id})
+        broadcast(
+            "reply_added",
+            {
+                "feedback_id": feedback_id,
+                "reply": serialize_reply(reply),
+                "unprocessed": unprocessed,
+            },
+        )
+        return JSONResponse({"id": reply.id, "unprocessed": unprocessed})
     return JSONResponse({"error": "not found"}, status_code=404)
 
 
