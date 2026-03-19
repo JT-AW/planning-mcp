@@ -12,10 +12,6 @@ Designed for use with Claude Code's plan mode workflow.
 # Install with uv
 uv pip install -e .
 
-# Or run directly
-uv run planning-mcp
-```
-
 ### MCP Server Registration
 
 Add to your MCP settings (`~/.claude/settings.json` or project-level):
