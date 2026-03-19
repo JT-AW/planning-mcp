@@ -2,26 +2,16 @@
 
 import { comments } from './state.js';
 
-export function highlightRange(range, commentId) {
-  const textNodes = getTextNodesInRange(range);
-  textNodes.forEach(({ node, startOffset, endOffset }) => {
-    const text = node.textContent;
-    const before = text.slice(0, startOffset);
-    const middle = text.slice(startOffset, endOffset);
-    const after = text.slice(endOffset);
-
-    const parent = node.parentNode;
-    const frag = document.createDocumentFragment();
-    if (before) frag.appendChild(document.createTextNode(before));
-
-    const mark = document.createElement("mark");
-    mark.dataset.comment = commentId;
-    mark.textContent = middle;
-    frag.appendChild(mark);
-
-    if (after) frag.appendChild(document.createTextNode(after));
-    parent.replaceChild(frag, node);
-  });
+export function highlightRange(range, commentId, commentType) {
+  // Compute precise character offset of range start within .main-content
+  const mainEl = document.querySelector(".main-content");
+  const preRange = document.createRange();
+  preRange.setStart(mainEl, 0);
+  preRange.setEnd(range.startContainer, range.startOffset);
+  const offset = preRange.toString().length;
+  const selectedText = range.toString();
+  if (!selectedText) return;
+  highlightTextInDOMWithHint(selectedText, commentId, offset, commentType);
 }
 
 export function getTextNodesInRange(range) {
@@ -57,7 +47,7 @@ export function getTextNodesInRange(range) {
   return result;
 }
 
-export function highlightTextInDOMWithHint(text, commentId, hintOffset) {
+export function highlightTextInDOMWithHint(text, commentId, hintOffset, commentType) {
   const mainEl = document.querySelector(".main-content");
   const fullText = mainEl.textContent;
 
@@ -72,38 +62,52 @@ export function highlightTextInDOMWithHint(text, commentId, hintOffset) {
   if (targetIdx === -1) targetIdx = fullText.indexOf(text);
   if (targetIdx === -1) return false;
 
+  // Collect text nodes that overlap with the target range
   const walker = document.createTreeWalker(mainEl, NodeFilter.SHOW_TEXT);
   let walkerNode;
   let charCount = 0;
+  const targetEnd = targetIdx + text.length;
+  const nodesToWrap = [];
+
   while ((walkerNode = walker.nextNode())) {
     const nodeLen = walkerNode.textContent.length;
-    if (charCount + nodeLen <= targetIdx) {
-      charCount += nodeLen;
-      continue;
-    }
+    const nodeStart = charCount;
+    const nodeEnd = charCount + nodeLen;
+
+    if (nodeEnd <= targetIdx) { charCount += nodeLen; continue; }
+    if (nodeStart >= targetEnd) break;
     if (walkerNode.parentNode.tagName === "MARK" && walkerNode.parentNode.dataset.comment) {
-      charCount += nodeLen;
-      continue;
+      charCount += nodeLen; continue;
     }
 
-    const localStart = targetIdx - charCount;
-    const localEnd = Math.min(localStart + text.length, nodeLen);
-    const before = walkerNode.textContent.slice(0, localStart);
-    const middle = walkerNode.textContent.slice(localStart, localEnd);
-    const after = walkerNode.textContent.slice(localEnd);
+    const sliceStart = Math.max(0, targetIdx - nodeStart);
+    const sliceEnd = Math.min(nodeLen, targetEnd - nodeStart);
+    nodesToWrap.push({ node: walkerNode, sliceStart, sliceEnd });
+    charCount += nodeLen;
+  }
 
-    const parent = walkerNode.parentNode;
+  if (nodesToWrap.length === 0) return false;
+
+  // Wrap in reverse order to avoid invalidating earlier nodes
+  for (let i = nodesToWrap.length - 1; i >= 0; i--) {
+    const { node, sliceStart, sliceEnd } = nodesToWrap[i];
+    const txt = node.textContent;
+    const before = txt.slice(0, sliceStart);
+    const middle = txt.slice(sliceStart, sliceEnd);
+    const after = txt.slice(sliceEnd);
+
+    const parent = node.parentNode;
     const frag = document.createDocumentFragment();
     if (before) frag.appendChild(document.createTextNode(before));
     const mark = document.createElement("mark");
     mark.dataset.comment = commentId;
+    if (commentType) mark.dataset.type = commentType;
     mark.textContent = middle;
     frag.appendChild(mark);
     if (after) frag.appendChild(document.createTextNode(after));
-    parent.replaceChild(frag, walkerNode);
-    return true;
+    parent.replaceChild(frag, node);
   }
-  return false;
+  return true;
 }
 
 export function removeHighlight(commentId) {
@@ -126,7 +130,7 @@ export function reanchorComments() {
   toAnchor.forEach(c => {
     const markId = c.localId;
 
-    const found = highlightTextInDOMWithHint(c.selectedText, markId, c.textOffset);
+    const found = highlightTextInDOMWithHint(c.selectedText, markId, c.textOffset, c.type);
     if (!found) {
       // Use anchorContext to locate the region, then highlight selectedText within it.
       // This avoids highlighting the full 100-char context as a superset of the selection.
@@ -141,7 +145,7 @@ export function reanchorComments() {
           const region = fullText.slice(ctxIdx, regionEnd);
           const localIdx = region.indexOf(c.selectedText);
           if (localIdx !== -1) {
-            ctxFound = highlightTextInDOMWithHint(c.selectedText, markId, ctxIdx + localIdx);
+            ctxFound = highlightTextInDOMWithHint(c.selectedText, markId, ctxIdx + localIdx, c.type);
           }
         }
       }

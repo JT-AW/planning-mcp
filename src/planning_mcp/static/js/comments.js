@@ -141,9 +141,22 @@ export function buildCommentCard(c) {
     toggle.className = "collapsed-toggle";
     toggle.textContent = "▸";
     toggle.title = "Expand";
+    const discard = document.createElement("span");
+    discard.className = "discard-btn";
+    discard.textContent = "\u00d7";
+    discard.title = "Discard comment";
+    discard.addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeHighlight(markId);
+      removeComment(c.localId);
+      renderCommentCards();
+    });
+    summary.appendChild(discard);
+
     summary.appendChild(toggle);
 
-    summary.addEventListener("click", () => {
+    summary.addEventListener("click", (e) => {
+      if (e.target.closest(".discard-btn")) return;
       card.classList.toggle("expanded");
       toggle.textContent = card.classList.contains("expanded") ? "▾" : "▸";
     });
@@ -196,6 +209,21 @@ export function buildCommentCard(c) {
       }
     });
     header.appendChild(goLink);
+  }
+
+  // Discard button
+  if (c.status !== "editing") {
+    const discard = document.createElement("span");
+    discard.className = "discard-btn";
+    discard.textContent = "\u00d7";
+    discard.title = "Discard comment";
+    discard.addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeHighlight(markId);
+      removeComment(c.localId);
+      renderCommentCards();
+    });
+    header.appendChild(discard);
   }
 
   card.appendChild(header);

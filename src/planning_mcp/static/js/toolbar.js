@@ -48,7 +48,7 @@ export function initToolbar() {
     const textOffset = getTextOffset(savedRange);
     const commentId = "local-" + getNextLocalId();
 
-    highlightRange(savedRange, commentId);
+    highlightRange(savedRange, commentId, action);
 
     addComment({
       localId: commentId,

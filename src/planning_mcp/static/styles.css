@@ -108,7 +108,7 @@ body {
 }
 .resize-handle:hover::after,
 .resize-handle.active::after {
-  background: var(--purple);
+  background: var(--accent);
   width: 3px;
   left: 1px;
   border-radius: 1px;
@@ -176,14 +176,45 @@ body.resizing * {
 }
 
 /* ── Markdown content ───────────────────────── */
-.section-content h1 { font-size: 20px; font-weight: 600; margin: 0 0 10px; letter-spacing: -0.025em; }
-.section-content h2 { font-size: 16px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.02em; color: var(--text); }
-.section-content h3 { font-size: 14px; font-weight: 600; margin: 0 0 6px; color: var(--text); }
-.section-content h4 { font-size: 12px; font-weight: 600; margin: 0 0 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+.section-content h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+.section-content h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  text-transform: uppercase;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.section-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--text);
+}
+.section-content h4 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 .section-content p { margin: 0 0 10px; }
 .section-content p:last-child { margin-bottom: 0; }
 .section-content ul, .section-content ol { margin: 0 0 10px; padding-left: 20px; }
-.section-content li { margin-bottom: 2px; }
+.section-content li { margin-bottom: 3px; }
+.section-content li::marker { color: var(--text-muted); }
 .section-content pre {
   background: var(--accent-light);
   border: 1px solid var(--border);
@@ -197,23 +228,46 @@ body.resizing * {
 .section-content code {
   font-family: 'JetBrains Mono', monospace;
   background: var(--accent-light);
+  border: 1px solid var(--border);
   border-radius: 3px;
   padding: 1px 5px;
-  font-size: 12.5px;
+  font-size: 12px;
+  color: var(--text);
 }
-.section-content pre code { background: none; padding: 0; }
-.section-content table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 0 0 10px; }
-.section-content th, .section-content td {
+.section-content pre code { background: none; padding: 0; border: none; }
+.section-content table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  margin: 0 0 10px;
   border: 1px solid var(--border);
-  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.section-content th, .section-content td {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 7px 12px;
   text-align: left;
 }
-.section-content th { background: var(--accent-light); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.section-content th:last-child, .section-content td:last-child { border-right: none; }
+.section-content th {
+  background: var(--accent-light);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+.section-content tr:last-child td { border-bottom: none; }
+.section-content tr:nth-child(even) td { background: rgba(0, 0, 0, 0.015); }
 .section-content blockquote {
   border-left: 2px solid var(--accent-border);
+  background: transparent;
   margin: 0 0 10px;
   padding: 2px 14px;
   color: var(--text-secondary);
+  font-style: italic;
 }
 .section-content hr {
   border: none;
@@ -224,28 +278,62 @@ body.resizing * {
 
 /* ── Text highlight for annotations ─────────── */
 mark[data-comment] {
-  background: rgba(24, 24, 27, 0.06);
-  border-bottom: 1.5px solid rgba(24, 24, 27, 0.25);
-  border-radius: 1px;
+  background: rgba(250, 204, 21, 0.22);
+  border-bottom: 2px solid rgba(202, 138, 4, 0.50);
+  border-radius: 2px;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 0.15s ease;
+  padding: 1px 0;
 }
 mark[data-comment]:hover {
-  background: rgba(24, 24, 27, 0.12);
-}
-mark[data-comment].active {
   background: rgba(250, 204, 21, 0.35);
-  border-bottom: 2px solid #eab308;
-  transition: background 0.15s;
+}
+/* Investigate = warm amber */
+mark[data-comment][data-type="investigate"] {
+  background: rgba(245, 158, 11, 0.18);
+  border-bottom-color: rgba(217, 119, 6, 0.55);
+}
+mark[data-comment][data-type="investigate"]:hover {
+  background: rgba(245, 158, 11, 0.30);
+}
+/* Update/opinion = blue */
+mark[data-comment][data-type="update_opinion"] {
+  background: rgba(59, 130, 246, 0.18);
+  border-bottom-color: rgba(37, 99, 235, 0.55);
+}
+mark[data-comment][data-type="update_opinion"]:hover {
+  background: rgba(59, 130, 246, 0.30);
+}
+/* Active state — clicked/focused */
+mark[data-comment].active {
+  background: rgba(250, 204, 21, 0.30);
+  border-bottom: 2px solid #ca8a04;
+  transition: background 0.1s;
 }
 
 @keyframes highlight-pulse {
-  0% { background: rgba(250, 204, 21, 0.5); }
+  0% { background: rgba(250, 204, 21, 0.50); }
   100% { background: rgba(250, 204, 21, 0.15); }
+}
+@keyframes highlight-pulse-amber {
+  0% { background: rgba(245, 158, 11, 0.45); }
+  100% { background: rgba(245, 158, 11, 0.15); }
+}
+@keyframes highlight-pulse-blue {
+  0% { background: rgba(59, 130, 246, 0.40); }
+  100% { background: rgba(59, 130, 246, 0.15); }
 }
 mark[data-comment].pulsing {
   animation: highlight-pulse 0.8s ease-out 2;
-  border-bottom: 2px solid #eab308;
+  border-bottom: 2px solid #ca8a04;
+}
+mark[data-comment][data-type="investigate"].pulsing {
+  animation: highlight-pulse-amber 0.8s ease-out 2;
+  border-bottom: 2px solid rgba(217, 119, 6, 0.7);
+}
+mark[data-comment][data-type="update_opinion"].pulsing {
+  animation: highlight-pulse-blue 0.8s ease-out 2;
+  border-bottom: 2px solid rgba(37, 99, 235, 0.7);
 }
 
 /* ── Selection toolbar ──────────────────────── */
@@ -326,6 +414,21 @@ mark[data-comment].pulsing {
 .comment-type-badge.update_opinion { background: var(--accent-light); color: var(--text-secondary); border-color: var(--accent-border); }
 .comment-type-badge.overall { background: var(--accent-light); color: var(--text-muted); border-color: var(--border); }
 
+.discard-btn {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s, color 0.1s;
+  padding: 0 2px;
+  line-height: 1;
+}
+.go-to-text + .discard-btn { margin-left: 0; }
+.comment-card:hover .discard-btn,
+.collapsed-summary:hover .discard-btn { opacity: 1; }
+.discard-btn:hover { color: #dc2626; }
+
 .go-to-text {
   margin-left: auto;
   font-size: 12px;
@@ -400,7 +503,7 @@ mark[data-comment].pulsing {
   margin-bottom: 2px;
 }
 .reply-author.user { color: var(--text-secondary); }
-.reply-author.claude { color: var(--purple); }
+.reply-author.claude { color: #0369a1; }
 .reply-message { font-size: 13px; color: var(--text); line-height: 1.45; }
 .reply-message p { margin: 0 0 4px; }
 .reply-message p:last-child { margin-bottom: 0; }
