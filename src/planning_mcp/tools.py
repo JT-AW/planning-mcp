@@ -12,7 +12,6 @@ from mcp.server.fastmcp import FastMCP
 
 from planning_mcp.models import Reply
 from planning_mcp.reanchor import _reanchor_all_comments, serialize_feedback, serialize_reply
-from planning_mcp.sections import replace_section_body
 from planning_mcp.state import broadcast, state
 from planning_mcp.web import start_web_server
 
@@ -20,14 +19,14 @@ mcp = FastMCP(
     name="planning-mcp",
     instructions=(
         "Interactive plan review tool. Publish a plan with open_plan, "
-        "then poll get_feedback for user annotations. Use update_section "
-        "to push revised content back to the browser. Use reply_to_feedback "
-        "to respond to specific comments in-thread. Use accept_plan to save "
-        "the plan to a file when the user is satisfied.\n\n"
-        "IMPORTANT: When calling open_plan or update_plan, prefer writing the "
-        "markdown to a temporary file and passing plan_file instead of inlining "
-        "the full content in plan_markdown. This avoids bloating the tool call "
-        "payload. Example: write to /tmp/plan.md, then call "
+        "then poll get_feedback for user annotations. Use reply_to_feedback "
+        "to respond to specific comments in-thread. Edit the source .md file "
+        "directly and call refresh to update the browser. Use accept_plan to "
+        "save the plan to a file when the user is satisfied.\n\n"
+        "IMPORTANT: When calling open_plan, prefer writing the markdown to a "
+        "file and passing plan_file instead of inlining the full content in "
+        "plan_markdown. This avoids bloating the tool call payload. Example: "
+        "write to /tmp/plan.md, then call "
         'open_plan(plan_file="/tmp/plan.md", plan_title="My Plan").'
     ),
 )
@@ -44,7 +43,7 @@ def open_plan(
 ) -> dict[str, object]:
     """Publish a plan to the browser for interactive review.
 
-    PREFERRED: Write markdown to a temp file and pass plan_file="/tmp/plan.md"
+    PREFERRED: Write markdown to a file and pass plan_file="/path/to/plan.md"
     instead of inlining content in plan_markdown. This keeps the tool call small.
 
     If both are given, plan_file takes precedence.
@@ -52,9 +51,11 @@ def open_plan(
     Opens the browser automatically. Returns {"port": int, "url": str}.
     """
     markdown = plan_markdown
+    source_path = ""
     if plan_file:
         path = Path(plan_file).expanduser()
         markdown = path.read_text(encoding="utf-8")
+        source_path = str(path)
 
     if not markdown:
         return {"error": "Provide either plan_markdown or plan_file"}
@@ -65,6 +66,7 @@ def open_plan(
     with state.lock:
         state.markdown = markdown
         state.title = plan_title
+        state.source_path = source_path
         state.feedback.clear()
 
     broadcast("plan_updated")
@@ -102,49 +104,35 @@ def mark_feedback_processed(feedback_id: str) -> dict[str, object]:
 
 
 @mcp.tool()
-def update_plan(plan_markdown: str = "", plan_file: str = "") -> dict[str, object]:
-    """Replace the entire plan with updated markdown. Browser auto-refreshes via SSE.
+def refresh(plan_file: str = "") -> dict[str, object]:
+    """Re-read the plan file from disk and refresh the browser.
 
-    PREFERRED: Write markdown to a temp file and pass plan_file="/tmp/plan.md"
-    instead of inlining content in plan_markdown. This keeps the tool call small.
+    Call this after editing the source .md file to push changes to the browser.
+    If plan_file is given, reads from that path. Otherwise re-reads the file
+    originally passed to open_plan.
     """
-    markdown = plan_markdown
-    if plan_file:
-        path = Path(plan_file).expanduser()
-        markdown = path.read_text(encoding="utf-8")
+    with state.lock:
+        file_path = plan_file or state.source_path
 
-    if not markdown:
-        return {"error": "Provide either plan_markdown or plan_file"}
+    if not file_path:
+        return {
+            "error": "No plan file to refresh — pass plan_file or open a plan with plan_file first"
+        }
+
+    path = Path(file_path).expanduser()
+    if not path.exists():
+        return {"error": f"File not found: {path}"}
+
+    markdown = path.read_text(encoding="utf-8")
 
     with state.lock:
         state.markdown = markdown
+        if plan_file:
+            state.source_path = str(path)
         comment_state = _reanchor_all_comments(markdown, state.feedback)
 
     broadcast("plan_updated", {"comments": comment_state})
     return {"ok": True}
-
-
-@mcp.tool()
-def update_section(
-    section_title: str,
-    new_content: str,
-) -> dict[str, object]:
-    """Update a single section of the plan by title.
-
-    Returns {"ok": bool, "warning": str | None}.
-    """
-    with state.lock:
-        updated, warning = replace_section_body(state.markdown, section_title, new_content)
-        if warning is None or "not found" not in warning:
-            state.markdown = updated
-            comment_state = _reanchor_all_comments(updated, state.feedback)
-        else:
-            comment_state = []
-
-    found = warning is None or "not found" not in warning
-    if found:
-        broadcast("plan_updated", {"section": section_title, "comments": comment_state})
-    return {"ok": found, "warning": warning}
 
 
 @mcp.tool()

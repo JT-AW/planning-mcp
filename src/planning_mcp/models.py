@@ -44,6 +44,7 @@ class FeedbackItem:
 class PlanState:
     markdown: str = ""
     title: str = "Plan Review"
+    source_path: str = ""
     feedback: list[FeedbackItem] = field(default_factory=list)
     sse_subscribers: list[queue.SimpleQueue[str]] = field(default_factory=list)
     lock: threading.Lock = field(default_factory=threading.Lock)

@@ -67,12 +67,12 @@ When plan mode begins, gather context before composing:
    Never inline the full plan content in tool call payloads.
 3. **Publish the same file** to the browser:
    `open_plan(plan_file=<plan_file_path>, plan_title="<title>")`.
-   This ensures the browser renders the exact same markdown the plan agent shows in its
-   approval modal.
-4. Iterate via browser annotations — `update_section` / `update_plan` write back to the same file.
+   Both the browser and Claude Code's plan approval modal render the same file.
+4. To update the plan, **edit the source .md file directly** (using Edit/Write tools), then call
+   `refresh()` to push the changes to the browser. Do NOT inline plan content in tool calls.
 5. **Before calling `ExitPlanMode`**, ensure the plan is visible in the browser. If the plan is
-   already open, use `reply_to_feedback` / `update_section` to address comments — do NOT call
-   `open_plan` again, as that clears the comment history.
+   already open, use `reply_to_feedback` to address comments and edit the file + `refresh()` for
+   content changes — do NOT call `open_plan` again, as that clears the comment history.
 
 ### Phase 3: Feedback Loop
 
@@ -80,9 +80,7 @@ When plan mode begins, gather context before composing:
 2. **Respond** to feedback:
    - `reply_to_feedback(feedback_id, message, pushback_type)` — push back with `"disagree"` or
      `"alternative"` when warranted
-   - `update_section(section_title, new_content)` — surgical update (preferred, preserves
-     comment anchors)
-   - `update_plan(plan_file=<plan_file_path>)` — full replace only for major restructuring
+   - Edit the source `.md` file + call `refresh()` — to update plan content
    - `mark_feedback_processed(feedback_id)` — mark handled items
 3. **Repeat** until the user is satisfied.
 
@@ -117,23 +115,21 @@ Claude Code (stdio)          Browser (HTTP + SSE)
       |    open_plan               |--- GET /plan
       |    get_feedback            |--- GET /feedback/all
       |    reply_to_feedback       |--- POST /feedback
-      |    update_section          |--- POST /feedback/submit-all
-      |    update_plan             |--- GET /events (SSE)
-      |    mark_feedback_processed |
+      |    refresh                 |--- POST /feedback/submit-all
+      |    mark_feedback_processed |--- GET /events (SSE)
       |    accept_plan             |--- POST /accept
 ```
 
-**Key design**: everything is in-memory during the session. Zero disk I/O until you call `accept_plan`. No database, no persistent state between sessions.
+**Key design**: everything is in-memory during the session. Zero disk I/O until you call `accept_plan` (except `refresh`, which re-reads the source file). No database, no persistent state between sessions.
 
 ### Source Files
 
 | File | Purpose |
 |------|---------|
-| `tools.py` | 7 MCP tool definitions |
+| `tools.py` | 6 MCP tool definitions |
 | `web.py` | FastAPI routes, SSE endpoint, uvicorn lifecycle |
 | `models.py` | Pydantic/dataclass models for feedback, replies, state |
 | `reanchor.py` | Comment re-anchoring when plan text changes |
-| `sections.py` | Markdown section parsing for surgical updates |
 | `state.py` | Global state singleton + SSE broadcast utility |
 | `static/` | Browser UI (vanilla JS, marked.js, DOMPurify) |
 
@@ -175,21 +171,16 @@ reply_to_feedback(
 )
 ```
 
-### `update_section`
+### `refresh`
 
-Surgically update a single section of the plan by header title. Preserves comment anchors better than full replacement.
-
-```
-update_section(section_title="Phase 2: Composition", new_content="...")
-```
-
-### `update_plan`
-
-Replace the entire plan markdown. Browser auto-refreshes via SSE. Comments are re-anchored to their original text positions.
+Re-read the plan file from disk and refresh the browser. Call this after editing the source `.md` file with your filesystem tools.
 
 ```
-update_plan(plan_file="/tmp/plan-v2.md")
+refresh()            # re-reads the file passed to open_plan
+refresh(plan_file="/tmp/plan-v2.md")  # reads from a different file
 ```
+
+Comments are automatically re-anchored to their original text positions. If the anchored text was removed, comments are marked as orphaned.
 
 ### `mark_feedback_processed`
 
@@ -250,7 +241,7 @@ Hover over any comment card to reveal the `x` button. Discarding removes both th
 
 ### Real-Time Updates
 
-The browser connects via Server-Sent Events (SSE). When Claude calls `update_section`, `reply_to_feedback`, or `mark_feedback_processed`, the browser updates instantly without requiring a page refresh.
+The browser connects via Server-Sent Events (SSE). When Claude calls `refresh`, `reply_to_feedback`, or `mark_feedback_processed`, the browser updates instantly without requiring a page refresh.
 
 ## Workflow
 
@@ -272,7 +263,7 @@ The user reviews in the browser, highlighting text and adding comments. They cli
 
 ### 3. Iterate
 
-Claude polls with `get_feedback()`, responds with `reply_to_feedback()`, and updates the plan with `update_section()` or `update_plan()`. Processed comments collapse automatically.
+Claude polls with `get_feedback()`, responds with `reply_to_feedback()`, edits the source `.md` file, and calls `refresh()` to push changes to the browser. Processed comments collapse automatically.
 
 ### 4. Accept
 
