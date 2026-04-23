@@ -6,8 +6,22 @@ import { reanchorComments } from './highlight.js';
 import { renderCommentCards } from './comments.js';
 
 export function parseSections(markdown) {
+  // Identify character ranges inside fenced code blocks so we don't treat
+  // `# comment` lines inside code as section headers.
+  const codeRanges = [];
+  const fenceRe = /^(```|~~~)[^\n]*\n[\s\S]*?^\1\s*$/gm;
+  for (const match of markdown.matchAll(fenceRe)) {
+    codeRanges.push([match.index, match.index + match[0].length]);
+  }
+  const isInCodeBlock = (idx) => {
+    for (const [s, e] of codeRanges) {
+      if (idx >= s && idx < e) return true;
+    }
+    return false;
+  };
+
   const headerRe = /^(#{1,4})\s+(.+)$/gm;
-  const matches = [...markdown.matchAll(headerRe)];
+  const matches = [...markdown.matchAll(headerRe)].filter(m => !isInCodeBlock(m.index));
   if (matches.length === 0) {
     return [{ level: 0, title: "__root__", headerLine: "", body: markdown }];
   }
