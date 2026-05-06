@@ -7,7 +7,9 @@ import threading
 from dataclasses import dataclass, field
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+AccessMode = Literal["local", "ssh", "external"]
 
 
 @dataclass
@@ -69,3 +71,18 @@ class ReplyRequest(BaseModel):
 
 class AcceptRequest(BaseModel):
     save_path: str
+
+
+class AppConfig(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    access_mode: AccessMode = "local"
+    ssh_destination: str = ""
+    local_forward_port: int = Field(default=0, ge=0)
+    public_url: str = ""
+
+    @model_validator(mode="after")
+    def validate_mode_requirements(self) -> "AppConfig":
+        if self.access_mode == "external" and not self.public_url:
+            raise ValueError("public_url is required when access_mode is 'external'")
+        return self

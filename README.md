@@ -11,6 +11,30 @@ Designed for use with Claude Code's plan mode workflow.
 ```bash
 # Install with uv
 uv pip install -e .
+```
+
+### Access Configuration
+
+`planning-mcp` reads an optional user config from `~/.planning-mcp/config.json`.
+If the file does not exist, it stays in local mode and behaves like the current
+same-machine setup.
+
+Copy `config.example.json` to `~/.planning-mcp/config.json` and edit it as needed:
+
+```json
+{
+  "access_mode": "local",
+  "ssh_destination": "",
+  "local_forward_port": 0,
+  "public_url": ""
+}
+```
+
+Notes:
+- `access_mode: "local"` is the default and should stay that way unless you explicitly need remote access.
+- `access_mode: "ssh"` returns a laptop-facing `http://127.0.0.1:<port>` URL plus an `ssh -L ...` command/template.
+- `access_mode: "external"` returns `public_url` and assumes you already manage the tunnel yourself.
+- JSON does not support comments, so field explanations live here in the README instead of inside the file.
 
 ### MCP Server Registration
 
@@ -127,6 +151,7 @@ Claude Code (stdio)          Browser (HTTP + SSE)
 | File | Purpose |
 |------|---------|
 | `tools.py` | 6 MCP tool definitions |
+| `config.py` | User config loading and access-mode resolution |
 | `web.py` | FastAPI routes, SSE endpoint, uvicorn lifecycle |
 | `models.py` | Pydantic/dataclass models for feedback, replies, state |
 | `reanchor.py` | Comment re-anchoring when plan text changes |
@@ -143,14 +168,20 @@ Claude Code (stdio)          Browser (HTTP + SSE)
 
 ### `open_plan`
 
-Publish a plan to the browser for interactive review. Starts the web server on first call, opens the browser automatically.
+Publish a plan to the browser for interactive review. Starts the web server on first call. Only local mode opens the browser automatically.
 
 ```
 open_plan(plan_file="/tmp/plan.md", plan_title="My Plan")
-# Returns: {"port": 59153, "url": "http://127.0.0.1:59153"}
+# Local mode returns: {"port": 59153, "url": "http://127.0.0.1:59153", "server_url": "http://127.0.0.1:59153", "access_mode": "local", "opened_browser": true}
 ```
 
 **Prefer `plan_file` over `plan_markdown`** to keep tool call payloads small. Write markdown to a temp file first.
+
+When configured for remote use:
+
+- `ssh` mode returns a browser URL for your laptop plus `ssh_forward.command`
+- `external` mode returns `public_url`
+- only `local` mode attempts to open a browser automatically on the server side
 
 ### `get_feedback`
 
@@ -260,6 +291,9 @@ Both the browser and Claude Code's plan approval modal render the same file.
 ### 2. Annotate
 
 The user reviews in the browser, highlighting text and adding comments. They click **Submit & Revise** to send all feedback to Claude.
+
+If `access_mode` is `ssh`, first run the returned `ssh -L ...` command on your laptop
+and then open the returned `url` in your local browser.
 
 ### 3. Iterate
 

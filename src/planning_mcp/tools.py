@@ -10,6 +10,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
+from planning_mcp.config import ConfigError, load_config, resolve_access
 from planning_mcp.models import Reply
 from planning_mcp.reanchor import _reanchor_all_comments, serialize_feedback, serialize_reply
 from planning_mcp.state import broadcast, state
@@ -23,6 +24,11 @@ mcp = FastMCP(
         "to respond to specific comments in-thread. Edit the source .md file "
         "directly and call refresh to update the browser. Use accept_plan to "
         "save the plan to a file when the user is satisfied.\n\n"
+        "Access mode is controlled by ~/.planning-mcp/config.json. "
+        'Set {"access_mode":"local"} for same-machine use, '
+        '{"access_mode":"ssh"} for SSH port forwarding, or '
+        '{"access_mode":"external","public_url":"https://..."} '
+        "for an existing tunnel.\n\n"
         "IMPORTANT: When calling open_plan, prefer writing the markdown to a "
         "file and passing plan_file instead of inlining the full content in "
         "plan_markdown. This avoids bloating the tool call payload. Example: "
@@ -33,6 +39,11 @@ mcp = FastMCP(
 
 
 # ── Plan tools ───────────────────────────────────────────────────────────────
+
+
+def open_browser_async(url: str) -> None:
+    """Open the browser without blocking the MCP tool response."""
+    threading.Thread(target=webbrowser.open, args=(url,), daemon=True).start()
 
 
 @mcp.tool()
@@ -48,7 +59,8 @@ def open_plan(
 
     If both are given, plan_file takes precedence.
     Starts the web server on first call (subsequent calls reuse it).
-    Opens the browser automatically. Returns {"port": int, "url": str}.
+    In local mode, opens the browser automatically.
+    Returns the user-facing URL plus any SSH forwarding details.
     """
     markdown = plan_markdown
     source_path = ""
@@ -60,8 +72,13 @@ def open_plan(
     if not markdown:
         return {"error": "Provide either plan_markdown or plan_file"}
 
+    try:
+        config = load_config()
+    except ConfigError as exc:
+        return {"error": str(exc)}
+
     port = start_web_server()
-    url = f"http://127.0.0.1:{port}"
+    access = resolve_access(config, port)
 
     with state.lock:
         state.markdown = markdown
@@ -70,9 +87,21 @@ def open_plan(
         state.feedback.clear()
 
     broadcast("plan_updated")
-    threading.Thread(target=webbrowser.open, args=(url,), daemon=True).start()
+    opened_browser = False
+    if access.should_open_browser:
+        open_browser_async(access.url)
+        opened_browser = True
 
-    return {"port": port, "url": url}
+    result: dict[str, object] = {
+        "port": port,
+        "url": access.url,
+        "server_url": access.server_url,
+        "access_mode": access.access_mode,
+        "opened_browser": opened_browser,
+    }
+    if access.ssh_forward is not None:
+        result["ssh_forward"] = access.ssh_forward
+    return result
 
 
 @mcp.tool()
