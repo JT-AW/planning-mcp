@@ -240,6 +240,13 @@ body.resizing * {
   color: var(--text);
 }
 .section-content pre code { background: none; padding: 0; border: none; }
+.section-content .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.25rem 0;
+  overflow-x: auto;
+}
+.section-content .mermaid svg { max-width: 100%; height: auto; }
 .section-content table {
   border-collapse: collapse;
   width: 100%;

@@ -4,6 +4,25 @@ import { setPlanData, comments, getNextLocalId } from './state.js';
 import { fetchPlan, fetchAllFeedback } from './api.js';
 import { reanchorComments } from './highlight.js';
 import { renderCommentCards } from './comments.js';
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+
+marked.use({
+  extensions: [{
+    name: 'mermaid',
+    level: 'block',
+    start(src) { return src.indexOf('```mermaid'); },
+    tokenizer(src) {
+      const match = src.match(/^```mermaid\n([\s\S]*?)\n```/);
+      if (match) return { type: 'mermaid', raw: match[0], text: match[1] };
+    },
+    renderer(token) {
+      const escaped = token.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<div class="mermaid">${escaped}</div>\n`;
+    },
+  }],
+});
 
 export function parseSections(markdown) {
   // Identify character ranges inside fenced code blocks so we don't treat
@@ -38,7 +57,7 @@ export function parseSections(markdown) {
   });
 }
 
-export function renderPlan(markdown) {
+export async function renderPlan(markdown) {
   const container = document.getElementById("plan-content");
   container.textContent = "";
 
@@ -56,6 +75,11 @@ export function renderPlan(markdown) {
 
     container.appendChild(block);
   });
+
+  const diagrams = container.querySelectorAll('.mermaid');
+  if (diagrams.length > 0) {
+    await mermaid.run({ nodes: diagrams, suppressErrors: true });
+  }
 }
 
 export async function fetchAndRender() {
@@ -63,7 +87,7 @@ export async function fetchAndRender() {
   setPlanData(data);
   document.getElementById("page-title").textContent = data.title;
   document.getElementById("plan-title").textContent = data.title;
-  renderPlan(data.markdown);
+  await renderPlan(data.markdown);
   reanchorComments();
   renderCommentCards();
 }
