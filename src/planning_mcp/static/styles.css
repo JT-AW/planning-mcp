@@ -863,3 +863,64 @@ button {
 .btn-revise.awaiting { background: transparent; color: var(--teal-muted); border-color: var(--teal-muted); cursor: default; }
 /* Empty: muted outline */
 .btn-revise.empty { background: transparent; color: var(--text-muted); border-color: var(--border); cursor: default; }
+
+/* ── In-browser editor ──────────────────────── */
+.header-btn {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 3px 12px;
+  border-radius: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.header-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.header-btn.active { color: var(--accent); border-color: var(--accent); background: var(--green-light); }
+
+.editor-panel {
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+.editor-textarea {
+  width: 100%;
+  min-height: calc(100vh - 52px - 160px);
+  resize: vertical;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  tab-size: 2;
+}
+.editor-textarea:focus { outline: none; border-color: var(--border-hover); }
+.editor-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.editor-save, .editor-cancel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 20px;
+  height: 36px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.editor-save { background: var(--accent); color: #06090a; }
+.editor-save:hover { background: var(--phos-hi); }
+.editor-save:disabled { background: var(--accent-border); color: var(--text-muted); cursor: wait; }
+.editor-cancel { background: transparent; color: var(--text-secondary); border-color: var(--border); }
+.editor-cancel:hover { color: var(--text); border-color: var(--border-hover); }

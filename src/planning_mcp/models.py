@@ -69,6 +69,10 @@ class ReplyRequest(BaseModel):
     is_pushback: bool = False
 
 
+class UpdatePlanRequest(BaseModel):
+    markdown: str
+
+
 class AcceptRequest(BaseModel):
     save_path: str
 
