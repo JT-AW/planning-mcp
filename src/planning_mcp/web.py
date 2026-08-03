@@ -15,8 +15,15 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from planning_mcp.models import AcceptRequest, FeedbackItem, FeedbackRequest, Reply, ReplyRequest
-from planning_mcp.reanchor import serialize_feedback, serialize_reply
+from planning_mcp.models import (
+    AcceptRequest,
+    FeedbackItem,
+    FeedbackRequest,
+    Reply,
+    ReplyRequest,
+    UpdatePlanRequest,
+)
+from planning_mcp.reanchor import _reanchor_all_comments, serialize_feedback, serialize_reply
 from planning_mcp.state import broadcast, find_free_port, state
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -43,6 +50,29 @@ def get_plan() -> JSONResponse:
                 "title": state.title,
             }
         )
+
+
+@api.post("/plan")
+def update_plan(body: UpdatePlanRequest) -> JSONResponse:
+    """Save an in-browser edit of the plan markdown.
+
+    Updates the in-memory plan, writes back to the source .md file (so a later
+    refresh/accept doesn't clobber the edit), re-anchors existing comments, and
+    broadcasts so all tabs re-render.
+    """
+    with state.lock:
+        state.markdown = body.markdown
+        source_path = state.source_path
+        comment_state = _reanchor_all_comments(body.markdown, state.feedback)
+
+    if source_path:
+        try:
+            Path(source_path).expanduser().write_text(body.markdown, encoding="utf-8")
+        except OSError as exc:
+            return JSONResponse({"error": f"Could not write {source_path}: {exc}"}, status_code=500)
+
+    broadcast("plan_updated", {"comments": comment_state})
+    return JSONResponse({"ok": True})
 
 
 @api.get("/feedback/all")

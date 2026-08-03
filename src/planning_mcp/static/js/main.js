@@ -5,6 +5,7 @@ import { connectSSE } from './sse.js';
 import { reanchorComments } from './highlight.js';
 import { renderCommentCards, updatePendingCount } from './comments.js';
 import { initToolbar } from './toolbar.js';
+import { initEditor } from './editor.js';
 import { submitAllDrafts, postFeedback } from './api.js';
 import { comments, addComment, getNextLocalId } from './state.js';
 import { initResizeHandles } from './resize.js';
@@ -119,6 +120,7 @@ async function init() {
   renderCommentCards();
   connectSSE();
   initToolbar();
+  initEditor();
   initFooter();
   initHighlightClickHandler();
   initResizeHandles();

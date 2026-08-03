@@ -10,6 +10,16 @@ export async function fetchAllFeedback() {
   return res.json();
 }
 
+export async function putPlan(markdown) {
+  const res = await fetch("/plan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ markdown }),
+  });
+  if (!res.ok) throw new Error("save failed");
+  return res.json();
+}
+
 export async function postFeedback(item) {
   const res = await fetch("/feedback", {
     method: "POST",

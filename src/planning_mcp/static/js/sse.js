@@ -4,6 +4,7 @@ import { comments } from './state.js';
 import { fetchAndRender } from './render.js';
 import { renderCommentCards } from './comments.js';
 import { morphButton } from './main.js';
+import { isEditingPlan } from './editor.js';
 
 export function connectSSE() {
   const es = new EventSource("/events");
@@ -11,7 +12,9 @@ export function connectSSE() {
     const msg = JSON.parse(e.data);
     if (msg.type === "plan_updated") {
       if (msg.comments) applyServerAnchors(msg.comments);
-      fetchAndRender();
+      // Don't clobber the textarea while the user is editing (this fires on our
+      // own save echo too — the save path re-renders itself after exiting).
+      if (!isEditingPlan()) fetchAndRender();
     } else if (msg.type === "reply_added") {
       handleReplyAdded(msg);
     } else if (msg.type === "feedback_processed") {
