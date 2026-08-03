@@ -256,11 +256,15 @@ body.resizing * {
   overflow-x: auto;
 }
 .section-content .mermaid svg { max-width: 100%; height: auto; }
+.section-content .table-scroll {
+  overflow-x: auto;
+  margin: 0 0 10px;
+}
 .section-content table {
   border-collapse: collapse;
   width: 100%;
   font-size: 13px;
-  margin: 0 0 10px;
+  margin: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
