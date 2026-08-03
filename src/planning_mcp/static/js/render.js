@@ -6,8 +6,9 @@ import { reanchorComments } from './highlight.js';
 import { renderCommentCards } from './comments.js';
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 import { renderCompare, renderSteps, renderCallout, renderDecision } from './blocks.js';
+import { currentTheme } from './theme.js';
 
-mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+mermaid.initialize({ startOnLoad: false, theme: currentTheme() === 'light' ? 'default' : 'dark' });
 
 const parseInline = (s) => marked.parseInline(s);
 
