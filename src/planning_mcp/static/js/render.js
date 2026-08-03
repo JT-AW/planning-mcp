@@ -99,6 +99,12 @@ export async function renderPlan(markdown) {
     const raw = marked.parse(sec.headerLine + (sec.headerLine ? "\n" : "") + sec.body);
     const sanitized = DOMPurify.sanitize(raw);
     contentDiv.innerHTML = sanitized; // nosec: sanitized by DOMPurify
+    contentDiv.querySelectorAll("table").forEach(table => {
+      const scroll = document.createElement("div");
+      scroll.className = "table-scroll";
+      table.replaceWith(scroll);
+      scroll.appendChild(table);
+    });
     block.appendChild(contentDiv);
 
     container.appendChild(block);
