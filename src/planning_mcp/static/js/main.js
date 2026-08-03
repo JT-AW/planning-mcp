@@ -8,6 +8,7 @@ import { initToolbar } from './toolbar.js';
 import { submitAllDrafts, postFeedback } from './api.js';
 import { comments, addComment, getNextLocalId } from './state.js';
 import { initResizeHandles } from './resize.js';
+import { initTheme } from './theme.js';
 
 const DEFAULT_BTN_TEXT = "Submit & Revise";
 let morphTimer = null;
@@ -111,6 +112,7 @@ function initHighlightClickHandler() {
 }
 
 async function init() {
+  initTheme();
   await fetchAndRender();
   await loadExistingComments();
   reanchorComments();

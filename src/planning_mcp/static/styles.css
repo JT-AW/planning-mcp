@@ -25,11 +25,44 @@
   --blue: #57b6ff;
   --red: #ff5d5d;
   --red-soft: #ff5d5d;
+  --on-accent: #06090a;
+  --row-stripe: rgba(140, 255, 200, 0.03);
+  --sent-bg: rgba(26, 55, 49, 0.6);
+  --sent-border: rgba(45, 106, 90, 0.5);
   --radius: 6px;
   --radius-sm: 4px;
   --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-display: 'Archivo', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+:root[data-theme="light"] {
+  --bg: #fafbfa;
+  --surface: #ffffff;
+  --border: rgba(16, 82, 55, 0.14);
+  --border-hover: rgba(16, 82, 55, 0.30);
+  --text: #1e2a25;
+  --text-secondary: #55655e;
+  --text-muted: #8a978f;
+  --accent: #0e9f6e;
+  --phos-hi: #0b7a55;
+  --accent-light: #eef7f2;
+  --accent-border: #cfe5da;
+  --amber: #b45309;
+  --amber-light: rgba(180, 83, 9, 0.10);
+  --amber-border: rgba(180, 83, 9, 0.35);
+  --green: #0e9f6e;
+  --green-light: rgba(14, 159, 110, 0.12);
+  --purple: #7c3aed;
+  --teal: #dcefe7;
+  --teal-muted: #4e8f79;
+  --blue: #1d6fd1;
+  --red: #d43d3d;
+  --red-soft: #d43d3d;
+  --on-accent: #ffffff;
+  --row-stripe: rgba(16, 82, 55, 0.03);
+  --sent-bg: #dcefe7;
+  --sent-border: #cfe5da;
 }
 
 body {
@@ -80,6 +113,21 @@ body {
   color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s;
+}
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
 }
 .header-badge {
   font-size: 9px;
@@ -281,7 +329,7 @@ body.resizing * {
   color: var(--text-secondary);
 }
 .section-content tr:last-child td { border-bottom: none; }
-.section-content tr:nth-child(even) td { background: rgba(140, 255, 200, 0.03); }
+.section-content tr:nth-child(even) td { background: var(--row-stripe); }
 .section-content blockquote {
   border-left: 2px solid var(--accent-border);
   background: transparent;
@@ -756,7 +804,7 @@ button {
   white-space: nowrap;
   transition: background 0.08s;
 }
-.btn-primary { background: var(--accent); color: #06090a; font-weight: 600; }
+.btn-primary { background: var(--accent); color: var(--on-accent); font-weight: 600; }
 .btn-primary:hover { background: var(--phos-hi); }
 .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
 .btn-ghost:hover { background: var(--accent-light); color: var(--text); }
@@ -799,7 +847,7 @@ button {
 }
 .pending-count {
   background: var(--accent);
-  color: #06090a;
+  color: var(--on-accent);
   font-size: 10px;
   font-weight: 700;
   border-radius: 3px;
@@ -826,7 +874,7 @@ button {
 }
 .btn-revise {
   background: var(--accent);
-  color: #06090a;
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -856,9 +904,9 @@ button {
   cursor: wait;
 }
 /* Sent: glassy teal */
-.btn-revise.sent { background: rgba(26, 55, 49, 0.6); color: var(--phos-hi); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-color: rgba(45, 106, 90, 0.5); }
+.btn-revise.sent { background: var(--sent-bg); color: var(--phos-hi); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-color: var(--sent-border); }
 /* Error: soft red */
-.btn-revise.error { background: var(--red-soft); color: #06090a; }
+.btn-revise.error { background: var(--red-soft); color: var(--on-accent); }
 /* Awaiting: teal outline */
 .btn-revise.awaiting { background: transparent; color: var(--teal-muted); border-color: var(--teal-muted); cursor: default; }
 /* Empty: muted outline */
